@@ -1,6 +1,6 @@
 {
   "name": "bxbt-theme-build",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Build UI theme presets from Figma token JSON exports",
   "type": "module",
   "main": "./src/index.js",
