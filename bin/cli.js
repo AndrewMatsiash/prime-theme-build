@@ -7,9 +7,18 @@ import { pathToFileURL } from 'node:url';
 
 import {
   buildPreset,
+  createDiffHistoryRecord,
+  diffPresets,
+  formatDiffHistory,
+  formatPresetDiff,
+  isEmptyDiff,
+  listDiffHistory,
+  parsePresetModule,
   readTokenJson,
   serializePresetModule,
   writeCssVariables,
+  writeDiffHistory,
+  DEFAULT_DIFF_HISTORY_DIRNAME,
 } from '../src/index.js';
 
 function printHelp() {
@@ -17,10 +26,13 @@ function printHelp() {
   bxbt-theme-build --config <theme.config.js>
   bxbt-theme-build css-vars --config <theme.config.js>
   bxbt-theme-build report --config <theme.config.js>
+  bxbt-theme-build diff --config <theme.config.js>
+  bxbt-theme-build diff --history --config <theme.config.js>
 
 Config exports default {
   tokensDir, outDir, pixelsPerRem?,
   reportsDir?, // default: <outDir>/../reports or ./theme/reports via app config
+  diffHistoryDir?, // default: <reportsDir>/diff-history; last 3 build diffs
   presets: [{ file, out }],
   cssVariables?: { preset?, out, prefix? }, // prefix default: 'p' → --p-*
   extendTemplate?(template, source),
@@ -35,8 +47,12 @@ function getArg(flag) {
 
 function resolveCommand() {
   const arg = process.argv[2];
-  if (arg === 'css-vars' || arg === 'report') return arg;
+  if (arg === 'css-vars' || arg === 'report' || arg === 'diff') return arg;
   return 'build';
+}
+
+function hasFlag(flag) {
+  return process.argv.includes(flag);
 }
 
 async function loadConfig(configPath) {
@@ -65,6 +81,40 @@ function resolveReportsDir(config) {
   return path.resolve(config.configDir, config.outDir, '../reports');
 }
 
+function resolveDiffHistoryDir(config) {
+  if (config.diffHistoryDir) {
+    return path.resolve(config.configDir, config.diffHistoryDir);
+  }
+  return path.join(resolveReportsDir(config), DEFAULT_DIFF_HISTORY_DIRNAME);
+}
+
+async function readPreviousPreset(outputPath) {
+  try {
+    return parsePresetModule(await fs.readFile(outputPath, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
+async function writeBuildDiffHistory(config, { out, preset, outputPath }) {
+  let previous;
+  try {
+    previous = await readPreviousPreset(outputPath);
+  } catch (error) {
+    console.error(`Could not diff previous preset ${outputPath}: ${error.message}`);
+    return;
+  }
+  if (!previous) return;
+  const diff = diffPresets(previous, preset);
+  if (isEmptyDiff(diff)) return;
+  const historyPath = await writeDiffHistory(
+    resolveDiffHistoryDir(config),
+    createDiffHistoryRecord(out, diff),
+  );
+  console.log(`Diff history: ${historyPath}`);
+}
+
 async function forEachPreset(config, visit) {
   const aura = resolveAura(config);
   const tokensDir = path.resolve(config.configDir, config.tokensDir);
@@ -87,6 +137,7 @@ async function buildPresets(config) {
 
   return forEachPreset(config, async ({ out, preset, report }) => {
     const outputPath = path.join(outDir, out);
+    await writeBuildDiffHistory(config, { out, preset, outputPath });
     await fs.writeFile(outputPath, serializePresetModule(preset), 'utf8');
     console.log(`Prime preset generated: ${outputPath}`);
     console.log(report.summary);
@@ -106,6 +157,29 @@ async function buildReports(config) {
     console.log(report.summary);
     return { reportPath, report };
   });
+}
+
+async function printPendingDiff(config) {
+  const outDir = path.resolve(config.configDir, config.outDir);
+  await forEachPreset(config, async ({ out, preset }) => {
+    const outputPath = path.join(outDir, out);
+    const previous = await readPreviousPreset(outputPath);
+    if (!previous) {
+      console.log(
+        `No previous preset at ${outputPath}. Run build once before diff.`,
+      );
+      return;
+    }
+    console.log(formatPresetDiff(diffPresets(previous, preset), { heading: out }));
+  });
+}
+
+async function printDiffHistory(config) {
+  const historyDir = resolveDiffHistoryDir(config);
+  for (const entry of config.presets) {
+    const records = await listDiffHistory(historyDir, entry.out);
+    console.log(formatDiffHistory(records, { heading: entry.out }));
+  }
 }
 
 async function buildCssVariables(config) {
@@ -155,6 +229,9 @@ async function main() {
     await buildCssVariables(config);
   } else if (command === 'report') {
     await buildReports(config);
+  } else if (command === 'diff') {
+    if (hasFlag('--history')) await printDiffHistory(config);
+    else await printPendingDiff(config);
   } else {
     await buildPresets(config);
   }

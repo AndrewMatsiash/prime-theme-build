@@ -22,6 +22,15 @@ export const serializePresetModule = (preset) =>
 export default preset;
 `;
 
+export function parsePresetModule(source) {
+  const start = source.indexOf('{');
+  const end = source.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('Generated preset module does not contain a JSON object.');
+  }
+  return JSON.parse(source.slice(start, end + 1));
+}
+
 export const readTokenJson = async (filePath) =>
   JSON.parse((await fs.readFile(filePath, 'utf8')).replace(/^\uFEFF/, ''));
 

@@ -30,7 +30,13 @@ Local path (during development):
 bxbt-theme-build --config theme.config.js
 bxbt-theme-build css-vars --config theme.config.js
 bxbt-theme-build report --config theme.config.js
+bxbt-theme-build diff --config theme.config.js
+bxbt-theme-build diff --history --config theme.config.js
 ```
+
+`diff` compares the new token JSON (in memory) with the current `outDir` preset and does not overwrite files. Run it **after** replacing the Figma export and **before** `build`.
+
+`build` writes a delta into `{reportsDir}/diff-history/` (last 3 generations per `out` file). `diff --history` prints those files.
 
 ### `theme.config.js`
 
@@ -39,6 +45,7 @@ export default {
   tokensDir: './theme/tokens',
   outDir: './theme/generated',
   reportsDir: './theme/reports',
+  // diffHistoryDir: './theme/reports/diff-history', // default; last 3 build diffs
   pixelsPerRem: 14,
   presets: [
     { file: 'design-tokens.json', out: 'prime-preset.ts' },

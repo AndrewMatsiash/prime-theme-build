@@ -28,7 +28,8 @@ JSON (Figma plugin)
 └─────────┬─────────┘
           │
           ├─► preset module (.ts)
-          └─► optional CSS variables (css-variables.js)
+          ├─► optional CSS variables (css-variables.js)
+          └─► diff vs previous .ts → reports/diff-history (last 3)
 ```
 
 Публичная точка входа: `buildPreset()` в `build-preset.js` (вызывает оба шага).
@@ -51,6 +52,7 @@ JSON (Figma plugin)
 | `report.js` | Валидация входа и `{aliases}`, prune полей, унаследованных от Aura |
 | `tree.js` | Обход деревьев: `mapLeafValues`, `forEachLeafValue`, `isObject` / `isDesignToken` |
 | `css-variables.js` | Отдельный шаг: preset → лист CSS-переменных (`prefix`, по умолчанию `--p-*`) |
+| `preset-diff.js` | Сравнение пресетов; история последних 3 дельт (`diff` / `diff --history`) |
 | `index.js` | Публичные экспорты пакета |
 
 ## Контракт плагина (не меняем)
@@ -85,7 +87,7 @@ JSON (Figma plugin)
 Публичный контракт: импорты из `bxbt-theme-build` / `src/index.js`.
 
 ```js
-import { buildPreset, writeCssVariables } from 'bxbt-theme-build';
+import { buildPreset, diffPresets, writeCssVariables } from 'bxbt-theme-build';
 ```
 
 Внутренние модули (`paths.js`, `resolve.js`, …) — детали реализации, не стабильный API.
