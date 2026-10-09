@@ -1,22 +1,29 @@
 # bxbt-theme-build
 
-Builds UI theme presets from `primeui-figma-plugin-v4` token JSON exports.
+Dev-tool: JSON from the PrimeUI Figma plugin → PrimeVue / PrimeUIX preset (`.ts`) and optional `--p-*` CSS variables.
 
-How modules fit together: see [ARCHITECTURE.md](./ARCHITECTURE.md).  
-For designers (what to add / avoid in Figma): [DESIGNER-GUIDE.md](./DESIGNER-GUIDE.md).  
-Engineering token rules: [VARIABLE-RULES.md](./VARIABLE-RULES.md).
+It does **not** run in the browser. The app imports the generated files. Aura comes from the app (`@primeuix/themes` peer).
 
-Token JSON is validated with [Zod](https://zod.dev) (`source` + required `aura/*` collections) before build.
+How modules fit together: [ARCHITECTURE.md](./ARCHITECTURE.md).  
+Figma rules for designers: [DESIGNER-GUIDE.md](./DESIGNER-GUIDE.md).  
+Token format rules: [VARIABLE-RULES.md](./VARIABLE-RULES.md).
+
+## Daily flow
+
+1. Designers export plugin JSON.
+2. Replace the old file in `tokensDir`.
+3. `diff` — what would change vs the current generated preset (does not write).
+4. `build` — write the new `.ts` and store the delta (last 3) in `reportsDir/diff-history/`.
+5. `css-vars` — only if the app also needs a SCSS/CSS variable sheet.
 
 ## Install
 
 ```bash
 npm i -D bxbt-theme-build
-# peer:
 npm i @primeuix/themes
 ```
 
-Local path (during development):
+Local path while developing the builder:
 
 ```json
 "devDependencies": {
@@ -26,41 +33,64 @@ Local path (during development):
 
 ## CLI
 
+All commands need `--config theme.config.js`.
+
+| Command | Writes files? | What it is for |
+|---------|---------------|----------------|
+| `bxbt-theme-build --config …` | yes: `outDir/*.ts` | **build** — generate the preset the app imports |
+| `diff --config …` | no | compare new JSON with the current `.ts` (`+` added, `-` removed, `~` changed) |
+| `diff --history --config …` | no | print the last 3 build deltas |
+| `css-vars --config …` | yes: `cssVariables.out` | CSS/SCSS sheet of `--{prefix}-*` (default `--p-*`) |
+| `report --config …` | yes: `reportsDir/*.report.json` | build diagnostics (unused tokens, inherited Aura fields) — not a value diff |
+
 ```bash
+bxbt-theme-build diff --config theme.config.js
 bxbt-theme-build --config theme.config.js
 bxbt-theme-build css-vars --config theme.config.js
-bxbt-theme-build report --config theme.config.js
-bxbt-theme-build diff --config theme.config.js
-bxbt-theme-build diff --history --config theme.config.js
 ```
 
-`diff` compares the new token JSON (in memory) with the current `outDir` preset and does not overwrite files. Run it **after** replacing the Figma export and **before** `build`.
+First `build` in an empty `outDir` has nothing to compare: no diff, no history file.
 
-`build` writes a delta into `{reportsDir}/diff-history/` (last 3 generations per `out` file). `diff --history` prints those files.
+## `theme.config.js`
 
-### `theme.config.js`
+| Field | For |
+|-------|-----|
+| `tokensDir` | folder with Figma JSON exports |
+| `outDir` | generated preset `.ts` (imported by the app) |
+| `reportsDir` | `report` JSON and, by default, diff history |
+| `diffHistoryDir` | override history folder (default `{reportsDir}/diff-history`) |
+| `presets` | `file` in `tokensDir` → `out` in `outDir` |
+| `pixelsPerRem` | Figma `scale.*` → `rem` |
+| `cssVariables.out` | generated variable sheet filename |
+| `cssVariables.prefix` | CSS prefix (`p` → `--p-*`). Must be the same prefix the app uses when attaching the theme |
+| `extendTemplate` | extra preset slots the app needs that Aura does not have |
+| `aura` | optional; otherwise Aura is loaded from the **app** `node_modules` |
 
 ```js
 export default {
   tokensDir: './theme/tokens',
   outDir: './theme/generated',
   reportsDir: './theme/reports',
-  // diffHistoryDir: './theme/reports/diff-history', // default; last 3 build diffs
   pixelsPerRem: 14,
   presets: [
     { file: 'design-tokens.json', out: 'prime-preset.ts' },
   ],
   cssVariables: {
     out: '_primevue-theme.variables.scss',
-    prefix: 'p', // → --p-*; must match theme options in the app
-  },
-  extendTemplate(template) {
-    // App-specific fields missing from Aura
+    prefix: 'p', // must match the prefix used when attaching the theme in the app
+
   },
 };
 ```
 
 ## API
+
+If you do not want the CLI, call the same two steps from a Node script.
+
+- `buildPreset(tokenExport, { aura, pixelsPerRem, extendTemplate })` — like CLI **build**: JSON object in, `{ preset, report }` out. `aura` is required here (pass Aura from `@primeuix/themes/aura`).
+- `writeCssVariables(preset, file, { prefix })` — like CLI **css-vars**: write `--{prefix}-*` to a file. `prefix` must match the prefix used when attaching the theme in the app.
+
+The app still imports the generated `.ts` / CSS, not this package.
 
 ```js
 import { buildPreset, writeCssVariables } from 'bxbt-theme-build';
@@ -69,7 +99,6 @@ import Aura from '@primeuix/themes/aura';
 const { preset, report } = buildPreset(tokenExport, {
   aura: Aura,
   pixelsPerRem: 14,
-  extendTemplate(template) {},
 });
 
 await writeCssVariables(preset, './theme.variables.scss', { prefix: 'p' });

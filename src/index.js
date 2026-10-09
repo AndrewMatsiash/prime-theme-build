@@ -12,6 +12,7 @@ export {
   DEFAULT_DIFF_HISTORY_KEEP,
   createDiffHistoryRecord,
   diffPresets,
+  toStoredPreset,
   formatDiffHistory,
   formatPresetDiff,
   isEmptyDiff,

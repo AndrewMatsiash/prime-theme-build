@@ -57,6 +57,18 @@ test('diffPresets reports added, removed and changed paths', () => {
   assert.equal(isEmptyDiff(diff), false);
 });
 
+test('diffPresets ignores undefined keys dropped by JSON.stringify', () => {
+  const inMemory = {
+    semantic: {
+      color: '{surface.0}',
+      placeholder: undefined,
+      nested: { missing: undefined },
+    },
+  };
+  const onDisk = parsePresetModule(serializePresetModule(inMemory));
+  assert.equal(isEmptyDiff(diffPresets(onDisk, inMemory)), true);
+});
+
 test('diffPresets is empty when presets match', () => {
   const preset = { semantic: { color: '{surface.0}' } };
   const diff = diffPresets(preset, structuredClone(preset));

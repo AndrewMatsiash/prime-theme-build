@@ -10,10 +10,15 @@ import { forEachLeafValue } from './tree.js';
 export const DEFAULT_DIFF_HISTORY_KEEP = 3;
 export const DEFAULT_DIFF_HISTORY_DIRNAME = 'diff-history';
 
+/** Same shape as the generated `.ts`: JSON.stringify drops `undefined` keys. */
+export function toStoredPreset(preset) {
+  return JSON.parse(JSON.stringify(preset));
+}
+
 export function flattenPreset(preset) {
   const valuesByPath = new Map();
   forEachLeafValue(preset, (value, pathSegments) => {
-    if (pathSegments.length === 0) return;
+    if (pathSegments.length === 0 || value === undefined) return;
     valuesByPath.set(pathSegments.join('.'), value);
   });
   return valuesByPath;
@@ -34,8 +39,8 @@ export function isEmptyDiff(diff) {
 }
 
 export function diffPresets(previousPreset, nextPreset) {
-  const previous = flattenPreset(previousPreset);
-  const next = flattenPreset(nextPreset);
+  const previous = flattenPreset(toStoredPreset(previousPreset));
+  const next = flattenPreset(toStoredPreset(nextPreset));
   const added = [];
   const removed = [];
   const changed = [];
