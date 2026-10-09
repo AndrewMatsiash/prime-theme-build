@@ -8,7 +8,7 @@
     ".": "./src/index.js"
   },
   "bin": {
-    "bxbt-theme-build": "./bin/cli.js"
+    "bxbt-theme-build": "bin/cli.js"
   },
   "files": [
     "src",
