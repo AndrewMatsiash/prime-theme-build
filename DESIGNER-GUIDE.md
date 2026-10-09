@@ -50,6 +50,19 @@
 
 Примеры: `navigation/workspacecard/…` → Semantic · `title/h4` → Typography · отступ «только наша шапка» → App/Custom.
 
+### Common или Color Scheme
+
+В плагине у Semantic и Component две полки: **common** (одно значение на обе темы) и **color scheme** (light / dark).
+
+| Куда | Когда |
+|------|--------|
+| Component **common** | Уже есть Prime-компонент (`button`, `dialog`, …) и значение **одно** на light и dark (радиус, отступ) |
+| Component **color scheme** | Тот же Prime-компонент, но цвет **разный** в light / dark |
+| Semantic **common** | Своя роль UI (`overlay/title`, `navigation/…`), значение **одно** на обе темы |
+| Semantic **color scheme** | Своя роль UI, значения **разные** в light / dark (`workspacecard`, `modalicon`) |
+
+Component не создаёт новые виджеты. Имени нет в Aura (`modalicon`, `workspacecard`) — **Semantic**, не Component. Иначе CSS-переменной не будет.
+
 Новые коллекции (кроме Typography) — только с разработкой.
 
 ### Без DEV / только с DEV
