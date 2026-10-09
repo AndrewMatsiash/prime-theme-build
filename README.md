@@ -4,10 +4,6 @@ Dev-tool: JSON from the PrimeUI Figma plugin → PrimeVue / PrimeUIX preset (`.t
 
 It does **not** run in the browser. The app imports the generated files. Aura comes from the app (`@primeuix/themes` peer).
 
-How modules fit together: [ARCHITECTURE.md](./ARCHITECTURE.md).  
-Figma rules for designers: [DESIGNER-GUIDE.md](./DESIGNER-GUIDE.md).  
-Token format rules: [VARIABLE-RULES.md](./VARIABLE-RULES.md).
-
 ## Daily flow
 
 1. Designers export plugin JSON.
