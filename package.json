@@ -1,0 +1,40 @@
+{
+  "name": "bxbt-theme-build",
+  "version": "1.0.0",
+  "description": "Build UI theme presets from Figma token JSON exports",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "bin": {
+    "bxbt-theme-build": "./bin/cli.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "README.md",
+    "ARCHITECTURE.md",
+    "VARIABLE-RULES.md",
+    "DESIGNER-GUIDE.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/**/*.test.js"
+  },
+  "peerDependencies": {
+    "@primeuix/themes": "^1.0.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "design-tokens",
+    "figma",
+    "theme"
+  ],
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}
