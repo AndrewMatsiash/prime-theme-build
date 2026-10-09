@@ -1,7 +1,12 @@
 /** Индекс коллекций экспорта Figma: поиск, unused, figma-only. */
 
 import { normalizeTokenName } from "./paths.js";
-import { BUILTIN_COLLECTION_NAMES, COMPONENT_PREFIX, SEMANTIC_PREFIX } from "./plugin-collections.js";
+import {
+  BUILTIN_COLLECTION_NAMES,
+  COMPONENT_PREFIX,
+  SEMANTIC_PREFIX,
+  isAppComponentsCollection,
+} from "./plugin-collections.js";
 import { isDesignToken, isObject } from "./tree.js";
 
 export const isFigmaOnlyTokenPath = (tokenPath) =>
@@ -14,7 +19,8 @@ export const getStandaloneCollectionNames = (tokenExport) =>
       collectionName.startsWith("aura/") &&
       !BUILTIN_COLLECTION_NAMES.includes(collectionName) &&
       !collectionName.startsWith(SEMANTIC_PREFIX) &&
-      !collectionName.startsWith(COMPONENT_PREFIX),
+      !collectionName.startsWith(COMPONENT_PREFIX) &&
+      !isAppComponentsCollection(collectionName),
   );
 
 /** Разворачиваем вложенный JSON в Map: form.field.padding.y -> определение токена. */

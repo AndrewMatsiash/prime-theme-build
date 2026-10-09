@@ -2,7 +2,7 @@
  * Контракт имён коллекций в JSON `primeui-figma-plugin-v4`.
  *
  * Не выводится из объекта Aura: у пресета есть primitive/semantic/components,
- * а app / custom / effects — только в экспорте плагина → уходят в extend.
+ * а app / custom / effects / app-components — только в экспорте плагина.
  */
 
 export const THEME_MODES = ['light', 'dark'];
@@ -20,6 +20,12 @@ export const PLUGIN_COLLECTIONS = {
     light: 'aura/component/light',
     dark: 'aura/component/dark',
   },
+  /** Наши виджеты (Figma: App Components) → extend / extend.colorScheme */
+  appComponents: {
+    common: 'aura/app-components-common',
+    light: 'aura/app-components-color-scheme/light',
+    dark: 'aura/app-components-color-scheme/dark',
+  },
   app: 'aura/app',
   custom: 'aura/custom',
   effects: 'aura/effects',
@@ -32,12 +38,19 @@ export const COMPONENT_PREFIX = 'aura/component/';
 
 export const SEMANTIC_COLLECTIONS = Object.values(PLUGIN_COLLECTIONS.semantic);
 export const COMPONENT_COLLECTIONS = Object.values(PLUGIN_COLLECTIONS.component);
+export const APP_COMPONENTS_COLLECTIONS = Object.values(
+  PLUGIN_COLLECTIONS.appComponents,
+);
 
 /** `aura/semantic/light` → `light`; common/unknown → `common`. */
 export function themeModeFromCollectionName(collectionName) {
   if (collectionName.endsWith('/light')) return 'light';
   if (collectionName.endsWith('/dark')) return 'dark';
   return 'common';
+}
+
+export function isAppComponentsCollection(collectionName) {
+  return APP_COMPONENTS_COLLECTIONS.includes(collectionName);
 }
 
 /** Обязательны в любом валидном экспорте. */
@@ -94,6 +107,8 @@ export function collectionsForAliasLookup(themeMode, standalone = []) {
     PLUGIN_COLLECTIONS.semantic.common,
     PLUGIN_COLLECTIONS.component[themeMode],
     PLUGIN_COLLECTIONS.component.common,
+    PLUGIN_COLLECTIONS.appComponents[themeMode],
+    PLUGIN_COLLECTIONS.appComponents.common,
     PLUGIN_COLLECTIONS.effects,
     PLUGIN_COLLECTIONS.app,
     PLUGIN_COLLECTIONS.custom,
@@ -101,9 +116,20 @@ export function collectionsForAliasLookup(themeMode, standalone = []) {
   ];
 }
 
-/** Порядок поиска для полей extend. */
-export function collectionsForExtend(standalone = []) {
+/**
+ * Порядок поиска для полей extend.
+ * light/dark → app-components-color-scheme/{mode}, затем common, потом app/custom/….
+ */
+export function collectionsForExtend(standalone = [], mode = 'common') {
+  const appComponents =
+    mode === 'common'
+      ? [PLUGIN_COLLECTIONS.appComponents.common]
+      : [
+          PLUGIN_COLLECTIONS.appComponents[mode],
+          PLUGIN_COLLECTIONS.appComponents.common,
+        ];
   return [
+    ...appComponents,
     PLUGIN_COLLECTIONS.app,
     PLUGIN_COLLECTIONS.custom,
     ...standalone,

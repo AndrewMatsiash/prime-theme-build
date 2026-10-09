@@ -100,7 +100,10 @@ test('fields missing from Aura are added from Figma automatically', async () => 
     preset.semantic.navigation.sidebar.padding,
     '{scale.1-75} {scale.1-143}',
   );
-  assert.equal(preset.semantic.overlay.title.fontSize, '{scale.1-5}');
+  assert.equal(
+    preset.extend.colorScheme.light.modalicon.danger.background,
+    '{red.100}',
+  );
   assert.equal(
     preset.semantic.colorScheme.light.navigation.workspacecard.background,
     '{surface.50}',

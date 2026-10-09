@@ -65,13 +65,13 @@ export const collapseToCamelKey = (segments) =>
  * @example
  * describePresetField(['extend', 'title', 'h1', 'font-weight', 'bold'])
  * // → { section: 'extend', mode: 'common', key: 'title.h1.font-weight.bold' }
+ *
+ * @example
+ * describePresetField(['extend', 'colorScheme', 'dark', 'modalicon', 'danger', 'background'])
+ * // → { section: 'extend', mode: 'dark', key: 'modalicon.danger.background' }
  */
 export function describePresetField(presetPathSegments) {
   const [presetSection, ...fieldSegments] = presetPathSegments;
-
-  if (presetSection === 'extend') {
-    return { section: 'extend', mode: 'common', key: fieldSegments.join('.') };
-  }
 
   let themeMode = 'common';
   const colorSchemeIndex = fieldSegments.indexOf('colorScheme');
@@ -86,7 +86,10 @@ export function describePresetField(presetPathSegments) {
   return {
     section: presetSection === 'components' ? 'component' : presetSection,
     mode: themeMode,
-    key: camelCaseToTokenPath(tokenPath),
+    key:
+      presetSection === 'extend'
+        ? tokenPath
+        : camelCaseToTokenPath(tokenPath),
   };
 }
 
@@ -140,4 +143,17 @@ export function proposeSemanticTemplatePath(figmaKey) {
   if (rest.length === 0) return [group];
   if (rest.length === 1) return [group, rest[0]];
   return [group, rest[0], collapseToCamelKey(rest.slice(1))];
+}
+
+/**
+ * App-components / extend: keep Figma nesting (border.color stays nested).
+ *
+ * @example
+ * proposeExtendTemplatePath('modalicon.danger.border.color')
+ * // → ['modalicon', 'danger', 'border', 'color']
+ */
+export function proposeExtendTemplatePath(figmaKey) {
+  const parts = figmaKey.split('.').filter(Boolean);
+  if (parts.length < 2) return null;
+  return parts;
 }

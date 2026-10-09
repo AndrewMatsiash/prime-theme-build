@@ -57,7 +57,7 @@ JSON (Figma plugin)
 
 ## Контракт плагина (не меняем)
 
-- Коллекции: `aura/primitive`, `aura/semantic/{common,light,dark}`, `aura/component/{…}`, `aura/app`, `aura/custom`, `aura/effects`, плюс standalone (`aura/typography`, …).
+- Коллекции: `aura/primitive`, `aura/semantic/{common,light,dark}`, `aura/component/{…}`, `aura/app-components-common` + `aura/app-components-color-scheme/{light,dark}` (наши виджеты → `extend`), `aura/app`, `aura/custom`, `aura/effects`, плюс standalone (`aura/typography`, …).
 - Имена в Figma: иерархия с `/` → в JSON точки / вложенность.
 - Числа в дизайне **без единиц**; единицы появляются в билдере.
 - Light / Dark — отдельные коллекции (или колонки в UI плагина).

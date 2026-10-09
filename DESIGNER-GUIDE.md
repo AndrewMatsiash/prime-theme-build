@@ -1,7 +1,7 @@
 # Правила для дизайнеров (обязательные)
 
-Только **PrimeUI-плагин** в Figma. Отклонения ломают тему в коде.  
-Не хватает правила под задачу — **не импровизируйте**, спросите разработку.
+Только **PrimeUI-плагин** в Figma. Ошибки в токенах ломают тему в продукте.  
+Не хватает правила — **не импровизируйте**, спросите разработку.
 
 ---
 
@@ -9,72 +9,63 @@
 
 | Запрещено | Делайте так |
 |-----------|-------------|
-| Единицы в значении: `14px`, `19.6px`, `1rem`, `140%`, `700px` | Только число: `14`, `19.6`, `700` |
+| Единицы в значении: `14px`, `19.6px`, `1rem`, `140%` | Только число: `14`, `19.6` |
 | Свой `font-size` мимо scale | Ссылка на `scale/…` |
 | `font-weight` числом в стиле текста | Ссылка на `weight/…` |
 | Текст внутри Component | Только **Typography** |
-| Бренд-токены в Primitive | **App** или **Custom** |
+| Цвет бренда / логотипа в Primitive | **App** или **Custom** |
 | Дублировать существующий токен | Сослаться на него |
-| Битая ссылка | Сначала создать токен / выбрать существующий |
-| Ссылка на Component из Semantic / Typography / App / Primitive | Только сверху вниз (см. §4) |
-| CSS-shorthand в числовом поле (`0 0 1px 0`) или смесь (`bold 16px Inter`) | Одно поле = одно значение. Tabs → border → width — только число |
-| Переименовывать пути Aura (`form/field/background`) | Менять только значение справа |
+| Битая ссылка | Сначала создать токен или выбрать существующий |
+| Ссылка из Semantic / Typography / App на Component | Только сверху вниз (см. §4) |
+| Несколько значений в одном поле (`0 0 1px 0`, `bold 16px Inter`) | Одно поле = одно значение |
+| Переименовывать готовые пути плагина (`form/field/background`) | Менять только значение справа |
 | Пробелы в именах (`content zone`) | Без пробелов: `content-zone` / `workspacecard` |
 
 ---
 
 ## 2. Как называть
 
-Путь в Figma (`navigation/sidebar/padding`) → в коде `--p-navigation-sidebar-padding`.
+Путь в Figma — это имя токена. `navigation` → `sidebar` → `padding` в теме станет `--p-navigation-sidebar-padding`.
 
 | Можно | Нельзя |
 |-------|--------|
 | Латиница, без пробелов | `content zone`, кириллица, эмодзи |
-| Иерархия уровнями: `navigation` → `sidebar` → `padding` | Имя экрана: `page-home-header-bg` |
+| Иерархия: `navigation` → `sidebar` → `padding` | Имя экрана: `page-home-header-bg` |
 | Один стиль: везде `workspacecard` **или** везде `workspace-card` | Мешать оба |
-| Существующие пути Aura как есть | Выдумывать `formFieldBg` вместо `form/field/…` |
+| Готовые пути плагина не трогать | Выдумывать `formFieldBg` вместо `form/field/…` |
 
 ---
 
 ## 3. Куда класть
 
-| Относится к… | Куда |
-|--------------|------|
-| Палитра / `scale` / `weight` | **Primitive** |
-| Часть интерфейса, не виджет Prime (content, form, navigation, overlay, карточка, иконка модалки) | **Semantic** |
-| Компонент Prime — виджет из Aura/PrimeVue (`button`, `tabs`, `dialog`…). Не любой наш блок UI | **Component** |
-| Текстовые стили | **Typography** |
-| Не тема Aura — только наше приложение | **App** / **Custom** |
+Сначала спросите: **это виджет PrimeVue или наш?**
 
-**Проверка:** в коде есть `<Button>` / `<Dialog>` Prime? Да → Component. Нет, свой блок? → Semantic или Custom.
+- В коде есть готовый PrimeVue (`Button`, `Dialog`, `Tabs`, `Menu`…) → коллекции **Component**.
+- Свой блок (иконка в модалке, своя карточка) → коллекции **App Components**.
+- Не виджет, а роль экрана (фон контента, поле формы, сайдбар) → **Semantic**.
+- Разовая вещь «только у нас» (полоска бренда в шапке) → **App** / **Custom**.
 
-**Primitive** — сырая палитра, без смысла «это фон кнопки». Только ступени: `surface/0…950`, `scale/…`, `weight/…`. На них ссылаются все остальные.  
-Пример: `scale/1-5`, `weight/700`, `surface/50` → `--p-scale-1-5`, `--p-weight-700`, `--p-surface-50`.  
-Бренд и разовые цвета продукта сюда нельзя: Primitive — общая шкала Aura, на неё ссылаются Semantic и Component. Если положить туда цвет логотипа, он притворится «ступенью палитры», его начнут переиспользовать не туда, и его нельзя будет убрать, не сломав чужие ссылки. Такой цвет → App/Custom.  
-Новую ступень внутри уже существующих групп (`scale/1-75`, `surface/25`) можно: билдер дописывает поля в `scale` / `weight` / `surface`. Новую группу (`brand`, `spacing`) — только с DEV: в Aura её нет, билдер не создаст, CSS-переменной не будет.
+| Это | Коллекция в Figma |
+|-----|-------------------|
+| Палитра, размеры `scale`, начертания `weight` | **Primitive** |
+| Роль интерфейса: content, form, overlay, navigation | **Semantic** |
+| Виджет PrimeVue | **Component Common** / **Component Color Scheme** |
+| Свой виджет, не PrimeVue | **App Components Common** / **App Components Color Scheme** |
+| Стиль текста | **Typography** |
+| Разовое, не виджет | **App** / **Custom** |
 
-**Semantic** — смысл в интерфейсе, не имя виджета Prime. Повторяется как роль: фон контента, поле формы, сайдбар, карточка воркспейса, иконка в модалке.  
-Пример: `modalicon/danger/background` → `--p-modalicon-danger-background`.
+У Semantic, Component и App Components всегда две коллекции:
 
-**Component** — только готовые виджеты Prime, которые уже есть в Aura: `button`, `tabs`, `dialog`, `drawer`, `inputtext`, `select`, `checkbox`… Кладите поля, которые Aura знает (фон, цвет, радиус, padding, border) и только то, что реально отличается от Aura: весь `button` копировать не нужно.  
-Нельзя выдумать `modalicon` / `workspacecard` — такого виджета в Prime нет, билдер проигнорирует, CSS-переменной не будет.
+| Коллекция | Что туда |
+|-----------|----------|
+| **… Common** | Одинаково в светлой и тёмной: размер, радиус, отступ |
+| **… Color Scheme** | Разница тем: цвет. Заполняйте **обе** колонки Light и Dark |
 
-**App / Custom** — разовое «только наше приложение», не общая роль темы. Не карточка и не поле, а например полоска бренда в шапке.  
-Пример: `header/brand-stripe` → `--p-header-brand-stripe`.  
-App/Custom ≠ «всё не-Semantic»: туда только то, что вне Primitive / Semantic / Component / Typography.
+Пример: у `modalicon` отступ — в **App Components Common**, фон danger — в **App Components Color Scheme** (свой цвет для Light и для Dark).
 
-Ещё: `title/h4` → Typography.
+**Primitive** — общая шкала, не «цвет этой кнопки». Сюда только ступени: `surface/0…950`, `scale/…`, `weight/…`. Цвет логотипа нельзя: на шкалу ссылаются все, потом его не вытащить. Новую ступень в уже существующей группе (`scale/1-75`) можно. Новую группу (`brand`) — только с разработкой.
 
-### Common или Color Scheme
-
-В плагине у Semantic и Component две полки: **common** (одно значение на обе темы) и **color scheme** (light / dark).
-
-| Куда | Когда |
-|------|--------|
-| Component **common** | Уже есть Prime-компонент (`button`, `dialog`, …) и значение **одно** на light и dark (радиус, отступ) |
-| Component **color scheme** | Тот же Prime-компонент, но цвет **разный** в light / dark |
-| Semantic **common** | Не виджет Prime, значение **одно** на обе темы (`overlay/title`) |
-| Semantic **color scheme** | Не виджет Prime, цвета **разные** в light / dark (`workspacecard`, `modalicon`) |
+**Component** — меняйте только то, что у нас отличается от стандартного PrimeVue. Не копируйте весь компонент.
 
 Новые коллекции (кроме Typography) — только с разработкой.
 
@@ -85,28 +76,28 @@ App/Custom ≠ «всё не-Semantic»: туда только то, что вн
 | Новый уровень Typography (`h4`, `caption`) с теми же полями | Новое **свойство** (`font-style`, `paragraph-spacing`, …) |
 | Новая ступень `scale` / `weight` / `surface` | Новая коллекция |
 | Новое значение у существующего токена (Light/Dark) | Токен «для одного экрана» не в App/Custom |
-| Продуктовый токен в App/Custom | Менять смысл имён Aura |
+| Продуктовый токен в App/Custom | Менять смысл готовых имён плагина |
 
 ---
 
 ## 4. Ссылки — только сверху вниз
 
+Токен может ссылаться «вниз» (на более общую полку), но не «вверх» на виджет.
+
 ```
-Component  ──►  Semantic  ──►  Primitive
-                  ▲
-Typography ───────┤
-App / Custom ─────┘
+Component / App Components ──► Semantic ──► Primitive
+Typography / App / Custom ───────────────▲
 ```
 
-| Кто | Может → | Не может → |
-|-----|---------|------------|
-| Component | Primitive, Semantic | — |
-| Semantic | Primitive, Semantic | **Component** |
-| Typography / App / Custom | Primitive, Semantic | **Component** |
+| Кто | Можно сослаться на | Нельзя |
+|-----|-------------------|--------|
+| Component, App Components | Primitive, Semantic | — |
+| Semantic | Primitive, Semantic | Component |
+| Typography / App / Custom | Primitive, Semantic | Component |
 | Primitive | Primitive | Semantic, Component |
 
-Ок: `button/…/background` → `{surface/0}`.  
-Нельзя: `content/background` → `{button/…}`.
+Ок: фон кнопки → `{surface/0}`.  
+Нельзя: фон контента → `{button/…}`.
 
 ---
 
@@ -114,17 +105,16 @@ App / Custom ─────┘
 
 | Поле | Можно | Нельзя |
 |------|-------|--------|
-| Цвет | Ссылка `surface/0`, `content/…` | Component-ссылка; лишний hex, если цвет уже в палитре |
+| Цвет | Ссылка `surface/0`, `content/…` | Ссылка на Component; свой hex, если цвет уже в палитре |
 | `font-size` | `scale/…` | Сырое `16`, `24` |
-| `font-weight` | `weight/…` | `700` в самом title/text |
+| `font-weight` | `weight/…` | `700` в самом стиле текста |
 | `line-height` | Число `19.6`, `29.4` | `19.6px`, `140%` |
-| Отступы / радиусы / tabs width | Число `1`, `8` | Shorthand `0 0 1px 0` |
-| `font-family` | `Inter` | Стеки без согласования |
+| Отступы / радиусы / толщина бордера | Число `1`, `8` | Несколько чисел в одном поле |
+| `font-family` | `Inter` | Стеки шрифтов без согласования |
 
 **Typography** — только текст. У стиля: `font-size` → scale, `font-weight` → weight, `line-height` → число.
 
-**Light / Dark:** меняете цвет — проверьте обе колонки.  
-**Component:** меняйте только то, что реально отличается от Aura; не копируйте весь компонент.
+**Light / Dark:** поменяли цвет — проверьте обе колонки.
 
 ---
 
@@ -133,9 +123,10 @@ App / Custom ─────┘
 - [ ] Числа без `px` / `%` / `rem`
 - [ ] `font-size` → `scale/…`, `font-weight` → `weight/…`, `line-height` → число
 - [ ] Текст только в Typography
-- [ ] Имена без пробелов; пути Aura не переименованы
+- [ ] Имена без пробелов; готовые пути плагина не переименованы
 - [ ] Ссылки только вниз (не на Component снаружи)
-- [ ] Нет битых ссылок; Light/Dark согласованы
+- [ ] Нет битых ссылок; Light и Dark согласованы. Пример: `modalicon/danger/background` в Light → `{red/100}`, в Dark → `{red/950}`; в обеих колонках ссылка живая, не пусто и не `#NaN`
+- [ ] Куда класть — §3
 - [ ] Новые свойства / коллекции — только после DEV
 
 Не экспортируйте, пока чеклист не закрыт. Не укладывается в правила → стоп → разработка.

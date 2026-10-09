@@ -33,7 +33,19 @@ import {
   getStandaloneCollectionNames,
   indexSourceCollections,
 } from './token-index.js';
-import { hasNestedPath, isObject, mapLeafValues } from './tree.js';
+import { forEachLeafValue, hasNestedPath, isObject, mapLeafValues } from './tree.js';
+
+const INVALID_TOKEN_VALUE = /#NaN|NaNNaN/i;
+
+function collectInvalidTokenValues(resolvedPreset) {
+  const invalid = [];
+  forEachLeafValue(resolvedPreset, (value, pathSegments) => {
+    if (typeof value === 'string' && INVALID_TOKEN_VALUE.test(value)) {
+      invalid.push({ path: pathSegments.join('.'), value });
+    }
+  });
+  return invalid;
+}
 
 export const DEFAULT_PIXELS_PER_REM = 14;
 
@@ -81,7 +93,7 @@ export function buildPresetFromTokens(
     const { section, mode } = presetField;
     const candidateCollections =
       section === 'extend'
-        ? collectionsForExtend(standaloneCollectionNames)
+        ? collectionsForExtend(standaloneCollectionNames, mode)
         : collectionsForPresetSection(section, mode);
     return findTokenInCollections(candidateCollections, tokenPath);
   }
@@ -202,6 +214,16 @@ export function buildPresetFromTokens(
     indexedCollections,
     usedTokenIds,
   );
+  const invalidTokenValues = collectInvalidTokenValues(resolvedPreset);
+  if (invalidTokenValues.length > 0) {
+    const sample = invalidTokenValues
+      .slice(0, 5)
+      .map(({ path, value }) => `${path}=${value}`)
+      .join('; ');
+    throw new Error(
+      `Некорректные значения токенов (${invalidTokenValues.length}): ${sample}`,
+    );
+  }
   return {
     preset: omitInheritedAuraFields(resolvedPreset, inheritedPaths),
     report: {
@@ -215,11 +237,13 @@ export function buildPresetFromTokens(
         inheritedFromAura: inheritedFromAura.length,
         unusedSourceTokens: unusedSourceTokens.length,
         ignoredSourceTokens: ignoredSourceTokens.length,
+        invalidTokenValues: invalidTokenValues.length,
       },
       keptFromTemplate,
       inheritedFromAura,
       unusedSourceTokens,
       ignoredSourceTokens,
+      invalidTokenValues,
     },
   };
 }

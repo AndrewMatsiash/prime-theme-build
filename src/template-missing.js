@@ -6,10 +6,12 @@
 import {
   describePresetField,
   proposeComponentTemplatePath,
+  proposeExtendTemplatePath,
   proposeSemanticTemplatePath,
   SIDE_TOKEN_SUFFIX,
 } from './paths.js';
 import {
+  APP_COMPONENTS_COLLECTIONS,
   COMPONENT_COLLECTIONS,
   SEMANTIC_COLLECTIONS,
   themeModeFromCollectionName,
@@ -116,6 +118,30 @@ export function addMissingFigmaTemplateFields(presetTemplate, tokenExport) {
             : ['colorScheme', mode, ...pathSegments];
         setTemplatePath(presetTemplate.semantic, templatePath);
         if (keyToAdd) semanticKeysByMode[mode].add(keyToAdd);
+      },
+    });
+  }
+
+  // App Components → extend / extend.colorScheme.{light,dark}
+  if (!isObject(presetTemplate.extend)) presetTemplate.extend = {};
+  const extendKeysByMode = collectRepresentedTokenKeysByMode(
+    'extend',
+    presetTemplate.extend,
+  );
+  for (const collectionName of APP_COMPONENTS_COLLECTIONS) {
+    const mode = themeModeFromCollectionName(collectionName);
+    const representedKeys = representedKeysForMode(extendKeysByMode, mode);
+    addMissingKeysFromSourceCollection({
+      sourceCollection: tokenExport[collectionName],
+      representedKeys,
+      proposePath: proposeExtendTemplatePath,
+      assignPath: (pathSegments, keyToAdd) => {
+        const templatePath =
+          mode === 'common'
+            ? pathSegments
+            : ['colorScheme', mode, ...pathSegments];
+        setTemplatePath(presetTemplate.extend, templatePath);
+        if (keyToAdd) extendKeysByMode[mode].add(keyToAdd);
       },
     });
   }
