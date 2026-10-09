@@ -41,14 +41,29 @@
 | Относится к… | Куда |
 |--------------|------|
 | Палитра / `scale` / `weight` | **Primitive** |
-| Роли UI (content, form, **navigation**, overlay…) | **Semantic** |
-| Компонент Prime (button, tabs…) | **Component** |
+| Часть интерфейса, не виджет Prime (content, form, navigation, overlay, карточка, иконка модалки) | **Semantic** |
+| Компонент Prime — виджет из Aura/PrimeVue (`button`, `tabs`, `dialog`…). Не любой наш блок UI | **Component** |
 | Текстовые стили | **Typography** |
 | Не тема Aura — только наше приложение | **App** / **Custom** |
 
-**App/Custom ≠ «всё не-Semantic».** Туда только то, что вне Primitive / Semantic / Component / Typography.
+**Проверка:** в коде есть `<Button>` / `<Dialog>` Prime? Да → Component. Нет, свой блок? → Semantic или Custom.
 
-Примеры: `navigation/workspacecard/…` → Semantic · `title/h4` → Typography · отступ «только наша шапка» → App/Custom.
+**Primitive** — сырая палитра, без смысла «это фон кнопки». Только ступени: `surface/0…950`, `scale/…`, `weight/…`. На них ссылаются все остальные.  
+Пример: `scale/1-5`, `weight/700`, `surface/50` → `--p-scale-1-5`, `--p-weight-700`, `--p-surface-50`.  
+Бренд и разовые цвета продукта сюда нельзя: Primitive — общая шкала Aura, на неё ссылаются Semantic и Component. Если положить туда цвет логотипа, он притворится «ступенью палитры», его начнут переиспользовать не туда, и его нельзя будет убрать, не сломав чужие ссылки. Такой цвет → App/Custom.  
+Новую ступень внутри уже существующих групп (`scale/1-75`, `surface/25`) можно: билдер дописывает поля в `scale` / `weight` / `surface`. Новую группу (`brand`, `spacing`) — только с DEV: в Aura её нет, билдер не создаст, CSS-переменной не будет.
+
+**Semantic** — смысл в интерфейсе, не имя виджета Prime. Повторяется как роль: фон контента, поле формы, сайдбар, карточка воркспейса, иконка в модалке.  
+Пример: `modalicon/danger/background` → `--p-modalicon-danger-background`.
+
+**Component** — только готовые виджеты Prime, которые уже есть в Aura: `button`, `tabs`, `dialog`, `drawer`, `inputtext`, `select`, `checkbox`… Кладите поля, которые Aura знает (фон, цвет, радиус, padding, border) и только то, что реально отличается от Aura: весь `button` копировать не нужно.  
+Нельзя выдумать `modalicon` / `workspacecard` — такого виджета в Prime нет, билдер проигнорирует, CSS-переменной не будет.
+
+**App / Custom** — разовое «только наше приложение», не общая роль темы. Не карточка и не поле, а например полоска бренда в шапке.  
+Пример: `header/brand-stripe` → `--p-header-brand-stripe`.  
+App/Custom ≠ «всё не-Semantic»: туда только то, что вне Primitive / Semantic / Component / Typography.
+
+Ещё: `title/h4` → Typography.
 
 ### Common или Color Scheme
 
@@ -58,10 +73,8 @@
 |------|--------|
 | Component **common** | Уже есть Prime-компонент (`button`, `dialog`, …) и значение **одно** на light и dark (радиус, отступ) |
 | Component **color scheme** | Тот же Prime-компонент, но цвет **разный** в light / dark |
-| Semantic **common** | Своя роль UI (`overlay/title`, `navigation/…`), значение **одно** на обе темы |
-| Semantic **color scheme** | Своя роль UI, значения **разные** в light / dark (`workspacecard`, `modalicon`) |
-
-Component не создаёт новые виджеты. Имени нет в Aura (`modalicon`, `workspacecard`) — **Semantic**, не Component. Иначе CSS-переменной не будет.
+| Semantic **common** | Не виджет Prime, значение **одно** на обе темы (`overlay/title`) |
+| Semantic **color scheme** | Не виджет Prime, цвета **разные** в light / dark (`workspacecard`, `modalicon`) |
 
 Новые коллекции (кроме Typography) — только с разработкой.
 
